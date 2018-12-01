@@ -15,14 +15,11 @@ var foundDoubleFrequency = false
 
 repeat {
     for val in changes {
-        current += val
-        if frequencies.contains(current) {
+        if !frequencies.insert(current).inserted {
             foundDoubleFrequency = true
             break
         }
-        else {
-            frequencies.insert(current)
-        }
+        current += val
     }
 } while !foundDoubleFrequency
 
