@@ -15,7 +15,7 @@ var foundDoubleFrequency = false
 
 repeat {
     for val in changes {
-        current = current + val
+        current += val
         if frequencies.contains(current) {
             foundDoubleFrequency = true
             break
