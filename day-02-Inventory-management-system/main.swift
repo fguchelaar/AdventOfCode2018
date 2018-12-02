@@ -24,6 +24,16 @@ struct BoxId {
             return count == 3
         })
     }
+    
+    func idByRemoveDifferentCharacters(from other: BoxId) -> String {
+        var result = ""
+        for i in self.id.indices {
+            if self.id[i] == other.id[i] {
+                result.append(self.id[i])
+            }
+        }
+        return result
+    }
 }
 
 var boxIds = input
@@ -42,3 +52,22 @@ let checksum = doubles * triples
 
 print("Part 1:")
 print(checksum)
+
+var found = false
+var common: String!
+repeat {
+    for outer in boxIds {
+        for inner in boxIds {
+            let diff = outer.idByRemoveDifferentCharacters(from: inner)
+            if diff.count == outer.id.count - 1 {
+                common = diff
+                found = true
+            }
+        }
+        if found { break }
+    }
+} while !found
+
+print("Part 2:")
+print(common!)
+
