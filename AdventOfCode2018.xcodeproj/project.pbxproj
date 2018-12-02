@@ -10,6 +10,7 @@
 		016886A221B26DF9009C0C4B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016886A121B26DF9009C0C4B /* main.swift */; };
 		016886A721B276D0009C0C4B /* input.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 016886A621B26EC8009C0C4B /* input.txt */; };
 		019EECD621B34F7C0013E504 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019EECD521B34F7C0013E504 /* main.swift */; };
+		019EECDB21B3DD900013E504 /* input.txt in CopyFiles */ = {isa = PBXBuildFile; fileRef = 019EECDA21B3DD7D0013E504 /* input.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +30,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 16;
 			files = (
+				019EECDB21B3DD900013E504 /* input.txt in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +42,7 @@
 		016886A621B26EC8009C0C4B /* input.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = input.txt; sourceTree = "<group>"; };
 		019EECD321B34F7C0013E504 /* day02 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = day02; sourceTree = BUILT_PRODUCTS_DIR; };
 		019EECD521B34F7C0013E504 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		019EECDA21B3DD7D0013E504 /* input.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = input.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				016886A021B26DF9009C0C4B /* day-01-chronal-calibration */,
-				019EECD421B34F7C0013E504 /* day02 */,
+				019EECD421B34F7C0013E504 /* day-02-Inventory-management-system */,
 				0168869221B26DD5009C0C4B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,12 +90,13 @@
 			path = "day-01-chronal-calibration";
 			sourceTree = "<group>";
 		};
-		019EECD421B34F7C0013E504 /* day02 */ = {
+		019EECD421B34F7C0013E504 /* day-02-Inventory-management-system */ = {
 			isa = PBXGroup;
 			children = (
 				019EECD521B34F7C0013E504 /* main.swift */,
+				019EECDA21B3DD7D0013E504 /* input.txt */,
 			);
-			path = day02;
+			path = "day-02-Inventory-management-system";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
