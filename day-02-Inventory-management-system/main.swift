@@ -18,7 +18,7 @@ struct BoxId {
             return count == 2
         })
     }
-
+    
     var hasTriple: Bool {
         return map.contains(where: { (char, count) -> Bool in
             return count == 3
@@ -54,20 +54,17 @@ print("Part 1:")
 print(checksum)
 
 var found = false
-var common: String!
-repeat {
-    for outer in boxIds {
-        for inner in boxIds {
-            let diff = outer.idByRemoveDifferentCharacters(from: inner)
-            if diff.count == outer.id.count - 1 {
-                common = diff
-                found = true
-            }
+var diff: String!
+for outer in boxIds {
+    for inner in boxIds {
+        diff = outer.idByRemoveDifferentCharacters(from: inner)
+        if diff.count == outer.id.count - 1 {
+            found = true
+            break;
         }
-        if found { break }
     }
-} while !found
+    if found { break }
+}
 
 print("Part 2:")
-print(common!)
-
+print(diff!)
