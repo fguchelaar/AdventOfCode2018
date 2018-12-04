@@ -57,8 +57,7 @@ for record in records {
 
 // Find the guard who sleeps the most
 let scenario1Guard = guards
-    .sorted { $0.value.totalSleepMinutes > $1.value.totalSleepMinutes}
-    .first!
+    .max { $0.value.totalSleepMinutes < $1.value.totalSleepMinutes}!
     .value
 
 print("Part 1:")
@@ -66,8 +65,7 @@ print(scenario1Guard.id * scenario1Guard.mostSleepMinute.minute)
 
 // Find the guard who sleeps has the most sleep in one specific minute
 let scenario2Guard = guards
-    .sorted { $0.value.mostSleepMinute.total > $1.value.mostSleepMinute.total}
-    .first!
+    .max { $0.value.mostSleepMinute.total < $1.value.mostSleepMinute.total}!
     .value
 
 print("Part 2:")
