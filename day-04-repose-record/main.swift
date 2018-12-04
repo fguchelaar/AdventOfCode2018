@@ -63,7 +63,7 @@ let scenario1Guard = guards
 print("Part 1:")
 print(scenario1Guard.id * scenario1Guard.mostSleepMinute.minute)
 
-// Find the guard who sleeps has the most sleep in one specific minute
+// Find the guard who sleeps the most in one specific minute
 let scenario2Guard = guards
     .max { $0.value.mostSleepMinute.total < $1.value.mostSleepMinute.total}!
     .value
