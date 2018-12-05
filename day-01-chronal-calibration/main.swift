@@ -11,17 +11,15 @@ print(frequency)
 // part 2
 var frequencies = Set<Int>()
 var current = 0
-var foundDoubleFrequency = false
 
-repeat {
+outer: while true {
     for val in changes {
         if !frequencies.insert(current).inserted {
-            foundDoubleFrequency = true
-            break
+            break outer
         }
         current += val
     }
-} while !foundDoubleFrequency
+}
 
 print("Part 2:")
 print(current)

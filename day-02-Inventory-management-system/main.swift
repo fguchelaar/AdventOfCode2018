@@ -53,17 +53,14 @@ let checksum = doubles * triples
 print("Part 1:")
 print(checksum)
 
-var found = false
 var diff: String!
-for outer in boxIds {
+outer: for outer in boxIds {
     for inner in boxIds {
         diff = outer.idByRemoveDifferentCharacters(from: inner)
         if diff.count == outer.id.count - 1 {
-            found = true
-            break;
+            break outer
         }
     }
-    if found { break }
 }
 
 print("Part 2:")
