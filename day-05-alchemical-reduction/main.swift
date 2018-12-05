@@ -33,7 +33,9 @@ let shortest: [Int] = (97...122)
     .map {
         let lower = Character(UnicodeScalar($0)!)
         let upper = Character(UnicodeScalar($0 - 32)!)
-        return length(for: input.replacingOccurrences(of: String(lower), with: "").replacingOccurrences(of: String(upper), with: ""))
+        return length(for:
+            input.replacingOccurrences(of: String(lower), with: "").replacingOccurrences(of: String(upper), with: "")
+        )
     }
 
 print("Part 2:")
