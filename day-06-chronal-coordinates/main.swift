@@ -15,8 +15,8 @@ struct Point: Hashable {
         return x.hashValue << 32 ^ y.hashValue
     }
     
-    func distance(to other: Point) -> Int {
-        return abs(self.x - other.x) + abs(self.y - other.y)
+    func distance(to other: Point) -> UInt {
+        return (self.x - other.x).magnitude + (self.y - other.y).magnitude
     }
 }
 
@@ -45,9 +45,8 @@ let maxPoint = coordinateMap
 
 // Keep a list of all coordinates that are on the edge of the grid
 var boundaryCoordinates = [Point]()
-var contested = [Point]()
 
-var grid = [Point: Int]()
+var grid = [Point: UInt]()
 
 for x in minPoint.x...maxPoint.x {
     for y in minPoint.y...maxPoint.y {
@@ -55,7 +54,7 @@ for x in minPoint.x...maxPoint.x {
         let c = Point(x: x, y: y)
         
         // distance to all coordinates
-        let distances = coordinateMap.keys.reduce(into: [Point: Int]()) {
+        let distances = coordinateMap.keys.reduce(into: [Point: UInt]()) {
             $0[$1] = $1.distance(to: c)
         }
         
@@ -81,9 +80,6 @@ for x in minPoint.x...maxPoint.x {
                 list.append(c)
                 coordinateMap[closest.first!.key] = list
             }
-        }
-        else {
-            contested.append(c)
         }
     }
 }
