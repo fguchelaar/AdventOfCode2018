@@ -23,7 +23,12 @@ var coordinateMap: [CGPoint: [CGPoint]] = input
         $0[$1] = [CGPoint]()
 }
 
-// find the bottom-right coordinate of the grid
+// find the grid's edges
+let minPoint = coordinateMap
+    .keys
+    .reduce(CGPoint(x: Int.max, y: Int.max)) {
+        CGPoint(x: min($0.x, $1.x), y: min($0.y, $1.y))
+}
 let maxPoint = coordinateMap
     .keys
     .reduce(CGPoint.zero) {
@@ -36,8 +41,8 @@ var contested = [CGPoint]()
 
 var grid = [CGPoint: Int]()
 
-for x in 0...Int(maxPoint.x) {
-    for y in 0...Int(maxPoint.y) {
+for x in Int(minPoint.x)...Int(maxPoint.x) {
+    for y in Int(minPoint.y)...Int(maxPoint.y) {
         
         let c = CGPoint(x: x, y: y)
         
@@ -46,7 +51,7 @@ for x in 0...Int(maxPoint.x) {
             $0[$1] = $1.distance(to: c)
         }
         
-        // Part 2: fill the grid
+        // Part 2: fill the grid with distances
         grid[c] = distances.values.reduce(0, +)
         
         // minimal distance
@@ -58,7 +63,7 @@ for x in 0...Int(maxPoint.x) {
         }
         
         if closest.count == 1 {
-            if x == 0 || y == 0 || x == Int(maxPoint.x) || y == Int(maxPoint.y) {
+            if x == Int(minPoint.x) || y == Int(minPoint.y) || x == Int(maxPoint.x) || y == Int(maxPoint.y) {
                 boundaryCoordinates.append(closest.first!.key)
             } else {
                 var list = coordinateMap[closest.first!.key] ?? [CGPoint]()
