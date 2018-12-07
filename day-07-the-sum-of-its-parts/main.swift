@@ -58,8 +58,8 @@ todo = initializeMap(from: input)
 order = ""
 var totalTime = -1 // -1 because we start a second '0'
 
-let addedTime: Int = 60
-let scalarValueOfA = Int("A".unicodeScalars.first!.value) - 1
+let extraCost: Int = 60
+let baseCost = Int("A".unicodeScalars.first!.value) - 1
 
 let numberOfWorkers = 5
 // dictionary of the step and it's TTL
@@ -97,7 +97,7 @@ while (!todo.isEmpty || !activeSteps.isEmpty) {
 
     // Get an elf to work on it!
     next.forEach {
-        let ttl = Int($0.unicodeScalars.first!.value) - scalarValueOfA + addedTime
+        let ttl = Int($0.unicodeScalars.first!.value) - baseCost + extraCost
         activeSteps[$0] = ttl
         todo.removeValue(forKey: $0)
     }
