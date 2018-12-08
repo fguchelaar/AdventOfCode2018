@@ -65,10 +65,8 @@ for x in minPoint.x...maxPoint.x {
         let minimal = distances.values.min()!
         
         // what is/are the closest coordinate(s)
-        let closest = distances.filter { (arg) -> Bool in
-            return arg.value == minimal
-        }
-        
+        let closest = distances.filter { $0.value == minimal }
+
         if closest.count == 1 {
             // If this c belongs to an edge of the grid, the area is infinite, so we can discard this area's coordinate
             // in the final result.
@@ -84,14 +82,15 @@ for x in minPoint.x...maxPoint.x {
     }
 }
 
-// filter out all coordinates that have an infinite area and sort by size
-let areas = coordinateMap
+// filter out all coordinates that have an infinite area and find the largest one
+let largestArea = coordinateMap
+    .lazy
     .filter { !boundaryCoordinates.contains($0.key) }
-    .map { ($0.key, $0.value.count) }
-    .sorted { $0.1 > $1.1 }
+    .map { $0.value.count }
+    .max { $0 < $1 }!
 
 print("Part 1:")
-print(areas.first!.1)
+print(largestArea)
 
 print("Part 2:")
 print(grid.values.filter { $0 < 10000 }.count )

@@ -26,10 +26,9 @@ class Guard {
     }
     
     var mostSleepMinute: (minute: Int, total: Int) {
-        let pair = sleeping
-            .sorted { $0.value > $1.value }
-            .first!
-        return (pair.key, pair.value)
+        return sleeping
+            .min { $0.value > $1.value }
+            .map { ($0.key, $0.value) }!
     }
 }
 
