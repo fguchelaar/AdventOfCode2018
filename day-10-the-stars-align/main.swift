@@ -10,18 +10,11 @@ struct Point {
     }
 }
 
-let regex = try! NSRegularExpression(pattern: "-?\\d+")
 let points = input
     .components(separatedBy: .newlines)
-    .map { line in
-        return regex.matches(in: line, options: [], range: NSRange(location: 0, length: line.utf16.count))
-            .compactMap { Range($0.range, in: line) }
-            .map { line[$0] }
-            .map { Int($0)! }
-    }
-    .map {
-        Point(x: $0[0], y: $0[1], dx: $0[2], dy: $0[3])
-    }
+    .map { $0.components(separatedBy: CharacterSet(charactersIn: "<>,")) }
+    .map { $0.map({ $0.trimmingCharacters(in: .whitespaces) }) }
+    .map { Point(x: Int($0[1])!, y: Int($0[2])!, dx: Int($0[4])!, dy: Int($0[5])!) }
 
 
 extension Array where Element == Point {
