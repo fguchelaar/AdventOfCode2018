@@ -1,26 +1,54 @@
 import Foundation
 
+class Node {
+    
+    var value: Int
+    
+    var previous: Node!
+    var next: Node!
+
+    init(value: Int) {
+        self.value = value
+        previous = self
+        next = self
+    }
+    
+    func append(value: Int) -> Node {
+        let new = Node(value: value)
+        
+        new.previous = self
+        new.next = self.next
+        
+        next.previous = new
+        next = new
+        
+        return new
+    }
+    
+    func remove() -> Node {
+        previous.next = next
+        next.previous = previous
+        return next
+    }
+}
+
 func solve(players: Int, maxPoints: Int) -> Int {
     var scores = Array(repeating: 0, count: players)
     
-    var currentMarble = 0
     var currentPlayer = 0
-    var circle = [0]
-    var circleCount = 1
+    var currentMarble = Node(value: 0)
+
     for points in 1...maxPoints {
-        
         if points % 23 == 0 {
-            currentMarble = ((currentMarble - 7) + circleCount) % circleCount // might improve performance, by keeping the count in a separate variable
-            scores[currentPlayer] += circle.remove(at: currentMarble) + points
-            circleCount -= 1
+            (0..<7).forEach { _ in currentMarble = currentMarble.previous }
+            scores[currentPlayer] += currentMarble.value + points
+            currentMarble = currentMarble.remove()
         } else {
-            currentMarble = ((currentMarble + 1) % circleCount) + 1
-            circle.insert(points, at: currentMarble)
-            circleCount += 1
+            currentMarble = currentMarble.next.append(value: points)
         }
+        
         currentPlayer = (currentPlayer + 1) % players
     }
-    
     return scores.max()!
 }
 
@@ -34,5 +62,5 @@ assert(solve(players: 30, maxPoints: 5807) == 37305)
 print("Part 1:")
 print(solve(players: 430, maxPoints: 71588))
 
-print("Part 2 (be aware, takes over 1,5 hours):")
+print("Part 2:")
 print(solve(players: 430, maxPoints: 7158800))
