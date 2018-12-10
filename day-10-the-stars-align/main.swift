@@ -12,10 +12,8 @@ struct Point {
 
 let points = input
     .components(separatedBy: .newlines)
-    .map { $0.components(separatedBy: CharacterSet(charactersIn: "<>,")) }
-    .map { $0.map({ $0.trimmingCharacters(in: .whitespaces) }) }
-    .map { Point(x: Int($0[1])!, y: Int($0[2])!, dx: Int($0[4])!, dy: Int($0[5])!) }
-
+    .map { $0.split(whereSeparator: { !"-1234567890".contains($0) }).map { Int($0)! } }
+    .map { Point(x: $0[0], y: $0[1], dx: $0[2], dy: $0[3]) }
 
 extension Array where Element == Point {
     func after(n: Int) -> [(x: Int, y: Int)] {
@@ -57,8 +55,6 @@ let rect = points.after(n: time).rectangle()
 
 var result = points.after(n: time)
     .map { (x: $0.x - rect.x1, y: $0.y - rect.y1) }
-    .sorted { ($0.y < $1.y) }
-    .sorted { ($0.x < $1.x) }
 
 // now we can draw from 0,0 to the bottom right, which we can get after the translation
 let translatedRect = result.rectangle()
