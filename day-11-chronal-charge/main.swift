@@ -19,11 +19,11 @@ func valueOfSquare(of size: Int, in grid: [[Int]], at pos: (x: Int, y: Int)) -> 
 }
 
 func maxValue(with size: Int) -> (x: Int, y: Int) {
-    let x = (0..<(grid.count - size + 1))
+    let xyv = (0..<(grid.count - size + 1))
         .flatMap { y in (0..<(grid.count - size + 1)).map { ($0, y)} }
         .map { ($0.0, $0.1, valueOfSquare(of: size, in: grid, at: $0)) }
         .max { $0.2 < $1.2 }!
-    return (x.0,x.1)
+    return (xyv.0,xyv.1)
 }
 
 // initialize the grid
