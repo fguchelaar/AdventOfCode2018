@@ -19,13 +19,13 @@ enum Direction: Int {
     var velocity: Point {
         switch self {
         case .up:
-            return .up
+            return Point(x: 0, y: -1)
         case .left:
-            return .left
+            return Point(x: -1, y: 0)
         case .right:
-            return .right
+            return Point(x: 1, y: 0)
         case .down:
-            return .down
+            return Point(x: 0, y: 1)
         }
     }
 }
@@ -33,11 +33,6 @@ enum Direction: Int {
 struct Point: Hashable, Equatable {
     var x: Int
     var y: Int
-    
-    static var left = Point(x: -1, y: 0)
-    static var up = Point(x: 0, y: -1)
-    static var right = Point(x: 1, y: 0)
-    static var down = Point(x: 0, y: 1)
     
     static func + (lhs: Point, rhs: Point) -> Point {
         return Point(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
@@ -87,22 +82,6 @@ func cart(in array: [Cart], at: Point) -> Cart? {
     return array.first { $0.point == at }
 }
 
-func print(track: [Point: Character], carts: [Cart]) {
-    let maxPoint = track.keys.reduce(Point(x:0,y:0)) { Point(x: max($0.x, $1.x), y: max($0.y, $1.y)) }
-    for y in 0...maxPoint.y {
-        let row: String = (0...maxPoint.x)
-            .reduce("") { (r,x) in
-                let point = Point(x: x, y: y)
-                if let cart = cart(in: carts, at: point) {
-                    return r + (cart.crashed ? "X" : "♦︎")
-                } else {
-                    return r + String((track[point] ?? " "))
-                }
-        }
-        Swift.print(row)
-    }
-}
-
 func parseCart(_ point: Point, _ char: Character) -> Cart {
     switch char {
     case "<":
@@ -144,24 +123,22 @@ let trackMap: [Point: Character] = input
 
 var didCrash = false
 while cartArray.count > 1 {
-    let sorted = cartArray.sorted { $0.point.y < $1.point.y || ($0.point.y == $1.point.y && $0.point.x < $1.point.x) }
-        
-    sorted.forEach { cart in
-        cart.processTrackPart(trackMap[cart.point]!)
-        
-        let all = cartArray
-            .filter { $0.point == cart.point }
-        
-        if all.count > 1 {
-            all.forEach { $0.crashed = true }
-            if !didCrash {
-                didCrash = true
-                print("Part 1:")
-                print("\(cart.point.x),\(cart.point.y)")
+    cartArray
+        .sorted { $0.point.y < $1.point.y || ($0.point.y == $1.point.y && $0.point.x < $1.point.x) }
+        .forEach { cart in
+            cart.processTrackPart(trackMap[cart.point]!)
+            
+            let atThisLocation = cartArray.filter { $0.point == cart.point }
+            
+            if atThisLocation.count > 1 {
+                atThisLocation.forEach { $0.crashed = true }
+                if !didCrash {
+                    didCrash = true
+                    print("Part 1:")
+                    print("\(cart.point.x),\(cart.point.y)")
+                }
             }
-        }
-        
-        cartArray = cartArray.filter { !$0.crashed }
+            cartArray = cartArray.filter { !$0.crashed }
     }
 }
 
