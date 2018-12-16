@@ -87,7 +87,6 @@ func parse(input: String) -> (cave: [Point: Character], players: [Player]) {
     return (cave, players)
 }
 
-
 func print(cave: [Point: Character], players: [Player]) {
     let maxPoint = cave.keys.reduce(Point(x: 0, y: 0)) { max($0, $1) }
     
@@ -105,6 +104,7 @@ func print(cave: [Point: Character], players: [Player]) {
     
     print (str.joined(separator: "\n"))
 }
+
 func print(cave: [Point: Character], players: [Player], distances: [Point: Int]) {
     let maxPoint = cave.keys.reduce(Point(x: 0, y: 0)) { max($0, $1) }
     
@@ -122,7 +122,6 @@ func print(cave: [Point: Character], players: [Player], distances: [Point: Int])
         }
         return row.joined()
     }
-    
     print (str.joined(separator: "\n"))
 }
 
@@ -143,30 +142,13 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
     dist[player.position] = 0
     
     while !unvisited.isEmpty {
-        
-//        let current = dist
-//            .filter { unvisited.contains($0.key) }
-//            .min { $0.value < $1.value }!
-//            .key
-        
+
         let current = unvisited.removeFirst()
         
         let neigbors = current.neighbors.filter { nb in
             return canWalk(on: nb)
         }.sorted()
-//            if !canWalk(on: nb) {
-//                return false
-//            }
-//            return !visited.contains(nb)
-//
-//            if visited.contains(nb) {
-//                return current < prev[nb]!
-//            }
-//            else {
-//                return true
-//            }
-//        }.sorted()
-        
+
         neigbors.forEach { neigbor in
             let distance = dist[current]! + 1
 
@@ -185,12 +167,6 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
             } else if !unvisited.contains(neigbor) {
                 unvisited.append(neigbor)
             }
-        
-//            if distance < dist[neigbor, default: Int.max] {
-//            }
-//            else if distance == dist[neigbor] {
-//                prev[neigbor] = [current, prev[neigbor]!].sorted().first!
-//            }
         }
         visited.insert(current)
     }
@@ -216,12 +192,9 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
             .map { ($0, $0.count) }
     
     if pathsToEnemies.isEmpty {
-        //        print("no reachable enemies")
         return nil
     }
-    
-    //    print(cave: cave, players: players, distances: dist)
-    
+
     let shortest = pathsToEnemies.map { $0.1 }.min()!
     
     var shortestPaths = pathsToEnemies.filter { $0.1 == shortest }
@@ -234,7 +207,7 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
 }
 
 
-func solve(file: String, elfPower: Int) -> (outcome: Int, elvesLeft: Int) {
+func solve(file: String, elfPower: Int) -> (outcome: Int, elvesDied: Int) {
     let input = try! String(contentsOfFile: file).trimmingCharacters(in: .whitespacesAndNewlines)
     
     let parsed = parse(input: input)
@@ -242,7 +215,6 @@ func solve(file: String, elfPower: Int) -> (outcome: Int, elvesLeft: Int) {
     var thePlayers = parsed.players
     thePlayers.filter { $0.type == .elf }.forEach { $0.attackPower = elfPower }
     var elvesDied = 0
-    //print(cave: cave, players: players)
     
     var round = 0
     func gameOver() -> Bool {
@@ -250,8 +222,6 @@ func solve(file: String, elfPower: Int) -> (outcome: Int, elvesLeft: Int) {
     }
     
     while !gameOver() {
-        //    print ("still in the game: \(players.active())")
-        
         var sorted = thePlayers.sorted { $0.position < $1.position }
         
         while !sorted.isEmpty {
@@ -269,62 +239,34 @@ func solve(file: String, elfPower: Int) -> (outcome: Int, elvesLeft: Int) {
                     if enemy.type == .elf {
                         elvesDied += 1
                     }
-                    //                print("\(enemy.type) died")
                     sorted = sorted.filter { $0.position != enemy.position }
                     thePlayers = thePlayers.filter { $0.position != enemy.position }
                 }
             }
             if gameOver() {
-                //            print ("After \(round) round(s):")
-                //            print(cave: cave, players: players)
-                //            print("")
                 break
             }
         }
         if sorted.isEmpty {
             round += 1
-            //        print ("After \(round) round(s):")
-            //        print(cave: cave, players: players)
-            //        print("")
         }
     }
-    
-//    print("After \(round)")
-//    print(cave: theCave, players: thePlayers)
-//    print("")
-    
-//    thePlayers
-//        .sorted { $0.position < $1.position }
-//        .forEach { print("\($0.type.rawValue)(\($0.hitPoints))") }
-    
+
     let remaining = thePlayers.reduce(0) { $0 + $1.hitPoints }
     let outcome = round * remaining
     return (outcome, elvesDied)
 }
 
-//print("\(solve(file: "example1.txt", elfPower: 3)) - 36334")
-//print("")
-//print("\(solve(file: "example2.txt", elfPower: 3)) - 39514")
-//print("")
-//print("\(solve(file: "example3.txt", elfPower: 3)) - 27755")
-//print("")
-//print("\(solve(file: "example4.txt", elfPower: 3)) - 28944")
-//print("")
-//print("\(solve(file: "example5.txt", elfPower: 3)) - 18740")
-//print("")
-//
-//let part1 = solve(file: "input.txt", elfPower: 3)
-//print("Part 1:")
-//print(part1.outcome)
+let part1 = solve(file: "input.txt", elfPower: 3)
+print("Part 1:")
+print(part1.outcome)
 
-
-var power = 2
-var result = (Int.min,Int.max)
+var power = 3
+var part2 = (outcome: Int.min, elvesDied: Int.max)
 repeat {
+    part2 = solve(file: "input.txt", elfPower: power)
     power += 1
-    result = solve(file: "input.txt", elfPower: power)
-    print("\(power): \(result)")
-} while result.1 != 0
+} while part2.elvesDied != 0
 
 print("Part 2:")
-print(result)
+print(part2.outcome)
