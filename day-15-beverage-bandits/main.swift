@@ -9,11 +9,11 @@ struct Point: Hashable, Equatable, Comparable, CustomStringConvertible {
     }
     
     var neighbors: [Point] {
-        let up = Point(x: x, y: y - 1)
-        let right = Point(x: x + 1, y: y)
-        let down = Point(x: x, y: y + 1)
-        let left = Point(x: x - 1, y: y)
-        return [up, left, right, down].sorted()
+        let up      = Point(x: x,       y: y - 1)
+        let right   = Point(x: x + 1,   y: y)
+        let down    = Point(x: x,       y: y + 1)
+        let left    = Point(x: x - 1,   y: y)
+        return [up, left, right, down]
     }
     
     static func < (lhs: Point, rhs: Point) -> Bool {
@@ -53,7 +53,6 @@ extension Sequence where Element == Player {
         let enemies = player.position.neighbors
             .compactMap({ self.player(at: $0) })
             .filter { player.type != $0.type }
-        
         
         if enemies.isEmpty {
             return nil
@@ -133,41 +132,67 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
     let target: Type = player.type == .goblin ? .elf : .goblin
     
     func canWalk(on: Point) -> Bool {
-        return cave[on] == "." && (players.player(at: on)?.type ?? target) != player.type
+        return cave[on] == "." && players.player(at: on) == nil
     }
     var dist = [Point: Int]()
     
+    var unvisited = [player.position] //(dist.keys.map { $0 })
     var visited = Set<Point>()
-    var unvisited = Set<Point>() //(dist.keys.map { $0 })
-    unvisited.insert(player.position)
     var prev = [Point: Point]()
     
     dist[player.position] = 0
     
     while !unvisited.isEmpty {
         
-        let current = dist
-            .filter { unvisited.contains($0.key) }
-            .min { $0.value < $1.value }!
-            .key
+//        let current = dist
+//            .filter { unvisited.contains($0.key) }
+//            .min { $0.value < $1.value }!
+//            .key
         
-        unvisited.remove(current)
-        visited.insert(current)
+        let current = unvisited.removeFirst()
         
-        let neigbors = current.neighbors.filter { !visited.contains($0) && canWalk(on: $0) }
+        let neigbors = current.neighbors.filter { nb in
+            return canWalk(on: nb)
+        }.sorted()
+//            if !canWalk(on: nb) {
+//                return false
+//            }
+//            return !visited.contains(nb)
+//
+//            if visited.contains(nb) {
+//                return current < prev[nb]!
+//            }
+//            else {
+//                return true
+//            }
+//        }.sorted()
         
         neigbors.forEach { neigbor in
-            unvisited.insert(neigbor)
             let distance = dist[current]! + 1
-            
-            if distance < dist[neigbor, default: Int.max] {
+
+            if !dist.keys.contains(neigbor) {
                 dist[neigbor] = distance
                 prev[neigbor] = current
             }
-            else if distance == dist[neigbor] {
-                prev[neigbor] = [current, prev[neigbor]!].sorted().first!
+            
+            if dist[neigbor]! > distance {
+                dist[neigbor] = distance
+                prev[neigbor] = current
             }
+            
+            if visited.contains(neigbor) {
+                // noop
+            } else if !unvisited.contains(neigbor) {
+                unvisited.append(neigbor)
+            }
+        
+//            if distance < dist[neigbor, default: Int.max] {
+//            }
+//            else if distance == dist[neigbor] {
+//                prev[neigbor] = [current, prev[neigbor]!].sorted().first!
+//            }
         }
+        visited.insert(current)
     }
     
     func path(to: Point) -> [Point]? {
@@ -209,13 +234,14 @@ func path(for player: Player, in cave: [Point: Character], with players: [Player
 }
 
 
-func solve(file: String) -> Int {
+func solve(file: String, elfPower: Int) -> (outcome: Int, elvesLeft: Int) {
     let input = try! String(contentsOfFile: file).trimmingCharacters(in: .whitespacesAndNewlines)
     
     let parsed = parse(input: input)
     let theCave = parsed.cave
     var thePlayers = parsed.players
-    
+    thePlayers.filter { $0.type == .elf }.forEach { $0.attackPower = elfPower }
+    var elvesDied = 0
     //print(cave: cave, players: players)
     
     var round = 0
@@ -240,6 +266,9 @@ func solve(file: String) -> Int {
             if let enemy = thePlayers.enemy(for: player) {
                 enemy.hitPoints -= player.attackPower
                 if enemy.hitPoints <= 0 {
+                    if enemy.type == .elf {
+                        elvesDied += 1
+                    }
                     //                print("\(enemy.type) died")
                     sorted = sorted.filter { $0.position != enemy.position }
                     thePlayers = thePlayers.filter { $0.position != enemy.position }
@@ -260,33 +289,42 @@ func solve(file: String) -> Int {
         }
     }
     
-    print("After \(round)")
-    print(cave: theCave, players: thePlayers)
-    print("")
+//    print("After \(round)")
+//    print(cave: theCave, players: thePlayers)
+//    print("")
     
-    thePlayers
-        .sorted { $0.position < $1.position }
-        .forEach { print("\($0.type.rawValue)(\($0.hitPoints))") }
-    
+//    thePlayers
+//        .sorted { $0.position < $1.position }
+//        .forEach { print("\($0.type.rawValue)(\($0.hitPoints))") }
     
     let remaining = thePlayers.reduce(0) { $0 + $1.hitPoints }
-    return round * remaining
+    let outcome = round * remaining
+    return (outcome, elvesDied)
 }
 
-print("\(solve(file: "example1.txt")) - 36334")
-print("")
-print("\(solve(file: "example2.txt")) - 39514")
-print("")
-print("\(solve(file: "example3.txt")) - 27755")
-print("")
-print("\(solve(file: "example4.txt")) - 28944")
-print("")
-print("\(solve(file: "example5.txt")) - 18740")
-print("")
+//print("\(solve(file: "example1.txt", elfPower: 3)) - 36334")
+//print("")
+//print("\(solve(file: "example2.txt", elfPower: 3)) - 39514")
+//print("")
+//print("\(solve(file: "example3.txt", elfPower: 3)) - 27755")
+//print("")
+//print("\(solve(file: "example4.txt", elfPower: 3)) - 28944")
+//print("")
+//print("\(solve(file: "example5.txt", elfPower: 3)) - 18740")
+//print("")
+//
+//let part1 = solve(file: "input.txt", elfPower: 3)
+//print("Part 1:")
+//print(part1.outcome)
 
-let part1 = solve(file: "input.txt")
-print("Part 1:")
-print(part1)
 
-//263900 - high
-//261261 - low
+var power = 2
+var result = (Int.min,Int.max)
+repeat {
+    power += 1
+    result = solve(file: "input.txt", elfPower: power)
+    print("\(power): \(result)")
+} while result.1 != 0
+
+print("Part 2:")
+print(result)
