@@ -167,12 +167,12 @@ let eqrr: opcode = { (a, b, c, registers) in
 
 let opcodes = ["addr": addr, "addi": addi, "mulr": mulr, "muli": muli, "banr": banr, "bani": bani, "borr": borr, "bori": bori, "setr": setr, "seti": seti, "gtir": gtir, "gtri": gtri, "gtrr": gtrr, "eqir": eqir, "eqri": eqri, "eqrr": eqrr]
 
-var ops = Array<[String]>(repeatElement(opcodes.keys.map { $0 }, count: 16))
+var opcodesById = Array<[String]>(repeatElement(opcodes.keys.map { $0 }, count: 16))
 
 let input = try! String(contentsOfFile: "input.txt").trimmingCharacters(in: .whitespacesAndNewlines)
 
 var samples = input
-    .components(separatedBy: "\n\n\n")[0]
+    .components(separatedBy: "\n\n\n\n")[0]
     .components(separatedBy: .newlines)
     .filter { !$0.isEmpty }
 
@@ -193,7 +193,8 @@ while !samples.isEmpty {
             op.value(opcode[1], opcode[2], opcode[3], input) == output
         }.keys.map { $0 }
 
-    ops[opcode[0]] = ops[opcode[0]].filter { eligible.contains($0) }
+    // Preperation for part 2: remove incompatible opcodes from the list
+    opcodesById[opcode[0]] = opcodesById[opcode[0]].filter { eligible.contains($0) }
 
     if eligible.count >= 3 {
         part1 += 1
@@ -203,5 +204,25 @@ while !samples.isEmpty {
 print("Part 1:")
 print(part1)
 
+// let's deduce all possible ops
+while opcodesById.contains(where: { $0.count > 1 }) {
+    let ones = opcodesById.filter { $0.count == 1 }.flatMap { $0 }
+    opcodesById.enumerated()
+        .filter { $0.element.count > 1 }
+        .forEach { opcodesById[$0.offset] = opcodesById[$0.offset].filter { !ones.contains($0) } }
+}
+
+var instructions = input
+    .components(separatedBy: "\n\n\n\n")[1]
+    .components(separatedBy: .newlines)
+
+var register = [0, 0, 0, 0]
+
+for op in instructions {
+    let opcode = op.extractInts()
+    let op = opcodes[opcodesById[opcode[0]].first!]!
+    register = op(opcode[1], opcode[2], opcode[3], register)!
+}
+
 print("Part 2:")
-print(ops)
+print(register[0])
