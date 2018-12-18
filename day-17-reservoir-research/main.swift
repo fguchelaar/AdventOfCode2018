@@ -11,6 +11,11 @@ extension String {
 struct Point: Hashable, Equatable {
     var x: Int
     var y: Int
+    
+    var up: Point { return Point(x: x, y: y-1) }
+    var left: Point { return Point(x: x-1, y: y) }
+    var right: Point { return Point(x: x+1, y: y) }
+    var down: Point { return Point(x: x, y: y+1) }
 }
 
 func parse(line: String) -> (x: ClosedRange<Int>, y: ClosedRange<Int>) {
@@ -37,11 +42,11 @@ let minmax = points.reduce((Point(x: Int.max, y: Int.max), Point(x: Int.min, y: 
     return (minPoint, maxPoint)
 }
 
-let clay = Set<Point>(points)
-let startPoint = Point(x: 500, y: minmax.0.y)
-var joints = [Point]()
-var water = [Point: Bool]()
-var currentJoint = startPoint
+var clay = Set<Point>(points)
+let startPoint = Point(x: 500, y: minmax.0.y).up
+var springs = [Point]()
+var water = Set<Point>()
+var currentSpring = startPoint
 
 func out(filename: String) {
     let debug = (minmax.0.y-1...minmax.1.y+1)
@@ -49,12 +54,14 @@ func out(filename: String) {
             (minmax.0.x-1...minmax.1.x+1).map { x in
                 let point = Point(x: x, y: y)
                 if startPoint == point {
-                    return "V"
-                } else if point == currentJoint {
+                    return "+"
+                } else if point == currentSpring {
                     return "X"
-                } else if joints.contains(point) {
+                } else if clay.contains(point) && water.contains(point) {
+                    return "~"
+                } else if springs.contains(point) {
                     return "0"
-                } else if let _ = water[point] {
+                } else if water.contains(point) {
                     return "|"
                 } else {
                     return clay.contains(point) ? "#" : "."
@@ -62,88 +69,97 @@ func out(filename: String) {
                 }.joined()
         }.joined(separator: "\r\n")
     
-    //print(debug)
-    try! debug.write(toFile: "/Users/frank/Workspace/bitbucket/fguchelaar/AdventOfCode2018/day-17-reservoir-research/\(filename)", atomically: true, encoding: .ascii)
+    // mind you: running from Xcode will put the file in the build-folder. Perhaps useful to append the path with
+    // some known folder before running
+    try! debug.write(toFile: filename, atomically: true, encoding: .ascii)
 }
 
 func down(point: Point) -> Bool {
-    let p2 = Point(x: point.x, y: point.y+1)
-    return p2.y <= minmax.1.y && !clay.contains(p2) && !water.contains { $0.key == p2}
+    let p = Point(x: point.x, y: point.y+1)
+    return p.y <= minmax.1.y
+        && !clay.contains(p)
 }
 
-func left(point: Point) -> Bool {
-    let p2 = Point(x: point.x-1, y: point.y)
-    let p3 = Point(x: point.x-1, y: point.y+1)
-    let p4 = Point(x: point.x, y: point.y+1)
-    let p5 = Point(x: point.x-1, y: point.y+1)
-    return
-        !clay.contains(p2)
-            && !water.contains { $0.key == p2}
-            && ((clay.contains(p3) || water.contains { $0.key == p3})
-                    || (clay.contains(p4) && !water.contains { $0.key == p5}))
+func leftEdge(point: Point) -> (point: Point, isSpring: Bool) {
+    var edge = point
+    while true {
+        if !clay.contains(edge.down) {
+            return (edge, true)
+        } else if clay.contains(edge.left) {
+            return (edge, false)
+        }
+        edge = edge.left
+    }
 }
 
-func right(point: Point) -> Bool {
-    let p2 = Point(x: point.x+1, y: point.y)
-    let p3 = Point(x: point.x+1, y: point.y+1)
-    let p4 = Point(x: point.x, y: point.y+1)
-    let p5 = Point(x: point.x+1, y: point.y+1)
-    return
-        !clay.contains(p2)
-            && !water.contains { $0.key == p2}
-            && ((clay.contains(p3) || water.contains { $0.key == p3})
-                || (clay.contains(p4) && !water.contains { $0.key == p5}))
+func rightEdge(point: Point) -> (point: Point, isSpring: Bool) {
+    var edge = point
+    while true {
+        if !clay.contains(edge.down) {
+            return (edge, true)
+        } else if clay.contains(edge.right) {
+            return (edge, false)
+        }
+        edge = edge.right
+    }
 }
 
 var current = startPoint
-outer: for i in 0...1000 {
-
-//    print(joints)
-//    out(filename: "after.\(i).txt")
-
+currentSpring = current
+springs.append(startPoint)
+while true {
+    
     while(down(point: current)) {
         current = Point(x: current.x, y: current.y + 1)
-        water[current] = true
+        water.insert(current)
     }
-
-    if left(point: current) || right(point: current) {
-        joints.insert(current, at: 0)
     
-//    out(filename: "step.1.txt")
-    while(left(point: current)) {
-        current = Point(x: current.x-1, y: current.y)
-        water[current] = true
-        if (down(point: current)) {
-            continue outer
+    let left = leftEdge(point: current)
+    let right = rightEdge(point: current)
+    
+    if current.down.y > minmax.1.y {
+        springs.removeFirst()
+    }
+    else if left.point == right.point {
+        
+        clay.insert(current)
+        if current == currentSpring {
+            springs.removeFirst()
         }
     }
-    
-//    out(filename:"step.2.txt")
-    current = joints.first!
-    currentJoint = current
-
-    while(right(point: current)) {
-        current = Point(x: current.x+1, y: current.y)
-        water[current] = true
-        if (down(point: current)) {
-            continue outer
+    else if !(left.point.x...right.point.x).allSatisfy({water.contains(Point(x: $0, y: current.y))}) {
+        
+        (left.point.x...right.point.x).forEach { x in
+            let p = Point(x: x, y: current.y)
+            water.insert(p)
+            // make clay
+            if !(left.isSpring || right.isSpring) {
+                clay.insert(p)
+            }
         }
+        // make wells
+        if left.isSpring {
+            springs.insert(left.point, at: 0)//.append(left.point)
+        }
+        if right.isSpring {
+            springs.insert(right.point, at: 0)//.append(right.point)
+        }
+        
+    } else {
+        springs.removeFirst()
     }
     
-//    out(filename: "step.3.txt")
-    }
-    else {
-//        out(filename: "no option \(i).txt")
-    }
-
-    current = joints.first!
-    if current == startPoint {
+    if springs.isEmpty {
+        print("no more springs")
         break
     }
-    current = Point(x: current.x, y: current.y - 1)
-    water[current] = true
-    currentJoint = current
-    joints.remove(at: 0)
+    current = springs.first!
+    currentSpring = current
 }
 
-out(filename: "after 100 steps.txt")
+print("Part 1:")
+print(water.count)
+//out(filename: "END.txt")
+
+print("Part 2:")
+print(clay.intersection(water).count)
