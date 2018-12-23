@@ -22,7 +22,7 @@ func printMaze() {
     let minmax = maze.keys.reduce((Point(x: Int.max, y: Int.max),Point(x: Int.min, y: Int.min))) {
         (Point(x: min($0.0.x, $1.x), y: min($0.0.y, $1.y)),Point(x: max($0.1.x, $1.x), y: max($0.1.y, $1.y)))
     }
-
+    
     let str = (minmax.0.y...minmax.1.y).map { y in
         (minmax.0.x...minmax.1.x).map { x in
             let point = Point(x: x, y: y)
@@ -75,7 +75,7 @@ func printMaze() {
     print(str)
 }
 
-func dijkstra(source: Point) -> ([Point: Int], [Point: Point]) {
+func dijkstra(source: Point) -> (dist: [Point: Int], prev: [Point: Point]) {
     
     var dist = maze.keys.reduce(into: [Point: Int]()) { $0[$1] = Int.max }
     var prev = [Point: Point]()
@@ -103,73 +103,61 @@ func dijkstra(source: Point) -> ([Point: Int], [Point: Point]) {
     return (dist, prev)
 }
 
-func parse(string: String, position: Point) {
-    func inner(string: String, position: Point, depth: Int) -> Int {
-        print ("[\(depth)] inner: \(string) - \(position)")
-        var current = position
-        var str = string
-        var eaten = 0
-        while !str.isEmpty {
-            // ensures presence of the current position
-            maze[current] = maze[current, default: Set<Point>()]
-            var canBranch = false
-            var char = str.removeFirst()
-            eaten += 1
-            print ("[\(depth)] got: \(char). eaten: \(eaten)")
-            switch char {
-            case "N","E","S","W":
-                let next = char == "N" ? current.N
-                    : char == "E" ? current.E
-                    : char == "S" ? current.S
-                    : current.W
-                
-                maze[next] = maze[next, default: Set<Point>()]
-                maze[current] = maze[current, default: Set<Point>()]
-                maze[current]!.insert(next)
-                maze[next]!.insert(current)
-                print("[\(depth)] connect \(current) to \(next)")
-                current = next
-            case "(":
-                canBranch = true
-                let didEat = inner(string: str, position: current, depth: depth+1)
-                str.removeFirst(didEat)
-                print ("[\(depth)] 1> \(didEat) -> \(str)")
-                eaten = 0
-            case "|":
-                return eaten
-//                if canBranch {
-                    let didEat = inner(string: str, position: position, depth: depth+1)
-                    str.removeFirst(didEat)
-                    print ("[\(depth)] 2> \(didEat) -> \(str)")
-//                } else {
-//
-//                }
-            case ")":
-                print ("[\(depth)] 3> \(eaten) -> \(str)")
-               //	 return eaten
-            default:
-                print("what shall we do here...")
-            }
-        }
-        return eaten
+struct Stack<T> {
+    private var inner = [T]()
+    
+    mutating func pop() -> T {
+        return inner.removeLast()
     }
     
-    _ = inner(string: string, position: position, depth: 0)
+    mutating func push(element: T) {
+        inner.append(element)
+    }
 }
 
-//let expanded = try! String(contentsOfFile: "expanded.txt")
-//    .trimmingCharacters(in: .whitespacesAndNewlines)
-//    .components(separatedBy: .newlines)
-//
-//for line in expanded {
-//    parse(string: line , position: Point(x: 0, y: 0))
-//}
+func parse(string: String, position: Point) {
+    var stack = Stack<Point>()
+    var current = position
+    var str = string
+    
+    while !str.isEmpty {
+        // ensures presence of the current position
+        maze[current] = maze[current, default: Set<Point>()]
+        
+        let char = str.removeFirst()
+        switch char {
+            
+        case "N","E","S","W":
+            let next = char == "N" ? current.N
+                : char == "E" ? current.E
+                : char == "S" ? current.S
+                : current.W
+            
+            maze[next] = maze[next, default: Set<Point>()]
+            maze[current] = maze[current, default: Set<Point>()]
+            maze[current]!.insert(next)
+            maze[next]!.insert(current)
+            current = next
+        case "(":
+            stack.push(element: current)
+        case "|":
+            current = stack.pop()
+            stack.push(element: current)
+        case ")":
+            current = stack.pop()
+        default:
+            print("what shall we do here...")
+        }
+    }
+}
 
-parse(string: "EE(NE|SE)E", position: Point(x: 0, y: 0))
-printMaze()
+parse(string: input.trimmingCharacters(in: CharacterSet(charactersIn: "^$")), position: Point(x: 0, y: 0))
+//printMaze()
 
-//parse(string: "EE(N|S)E", position: Point(x: 0, y: 0))
-//print("")
 let dp = dijkstra(source: Point(x: 0, y: 0))
+
+print("Part 1:")
 print(dp.0.values.max()!)
 
+print("Part 2:")
+print(dp.0.values.filter { $0 >= 1000 }.count)
