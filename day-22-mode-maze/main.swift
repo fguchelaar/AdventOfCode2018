@@ -17,12 +17,8 @@ struct Point: Hashable, Equatable {
     }
 }
 
-//let depth =  5355
-//let target = Point(14, 796)
-
-let depth =  510
-let target = Point(10, 10)
-
+let depth =  5355
+let target = Point(14, 796)
 
 var cache = [
     Point(0,0): 0,
@@ -49,14 +45,20 @@ func erosionLevel(for point: Point) -> Int {
     return (geoIndex(for: point) + depth) % 20183
 }
 
+func regionType(for point: Point) -> RegionType {
+    return RegionType(rawValue: erosionLevel(for: point) % 3)!
+}
+
 enum RegionType: Int {
     case rocky = 0
     case wet
     case narrow
 }
 
-func regionType(for point: Point) -> RegionType {
-    return RegionType(rawValue: erosionLevel(for: point) % 3)!
+enum Tool {
+    case climbingGear
+    case torch
+    case neither
 }
 
 let p1 = (0...target.y).flatMap { y in
@@ -69,100 +71,96 @@ let p1 = (0...target.y).flatMap { y in
 print ("Part 1:")
 print (p1.reduce(0, +))
 
-enum Tool: CaseIterable {
-    case climbingGear
-    case torch
-    case neither
-}
-
 func a🌟(start: Point, goal: Point) -> (path: [Point], time: Int) {
+    
+    struct State: Hashable, Equatable {
+        var point: Point
+        var tool: Tool
+        
+        func neighbors() -> [State] {
+            return point.n4().map { neighbor in
+                
+                let currentType = regionType(for: point)
+                let neighborType = regionType(for: neighbor)
+                
+                var newTool = tool
+                if neighborType == .rocky {
+                    if tool == .neither {
+                        newTool = (currentType == .wet ? .climbingGear : .torch)
+                    }
+                } else if neighborType == .wet {
+                    if tool == .torch {
+                        newTool = (currentType == .rocky ? .climbingGear : .neither)
+                    }
+                } else if neighborType == .narrow {
+                    if tool == .climbingGear {
+                        newTool = (currentType == .wet ? .neither : .torch)
+                    }
+                }
+                return State(point: neighbor, tool: newTool)
+            }
+        }
+    }
+    
+    func cost(_ from: State, to: State) -> Int {
+        return from.tool == to.tool ? 1 : 8
+    }
     
     func heuristic(_ from: Point, _ to: Point) -> Int {
         // Let's try manhattan
         return abs(from.x - to.x) + abs(from.y - to.y)
     }
     
-    func reconstruct(cameFrom: [Point: Point], point: Point) -> [Point] {
-        var path = [point]
+    func reconstruct(cameFrom: [State: State], point: State) -> [Point] {
+        var path = [point.point]
         var crnt = point
         while let p = cameFrom[crnt] {
-            path.insert(p, at: 0)
+            path.insert(p.point, at: 0)
             crnt = p
         }
         return path
     }
     
-    var closed = Set<Point>()
-    var open = [start: Tool.torch]
+    var closed = Set<State>()
+    let startState = State(point: start, tool: .torch)
+    var open = [startState]
     
-    var prev = [Point: Point]()
+    var prev = [State: State]()
     
-    var gScore = [Point: Int]()
-    gScore[start] = 0
+    var gScore = [State: Int]()
+    gScore[startState] = 0
     
-    var fScore = [Point: Int]()
-    fScore[start] = heuristic(start, goal)
+    var fScore = [State: Int]()
+    fScore[startState] = heuristic(start, goal)
     
-    var current: Point
+    var current: State
     while !open.isEmpty {
         
-        current = fScore
-            .filter { open.keys.contains($0.key) }
-            .min { $0.value < $1.value }!
-            .key
+        open.sort {fScore[$0]! < fScore[$1]! }
+        current = open.removeFirst()
         
-        if current == goal {
-            let cost = gScore[current]! + (open[current]! == .torch ? 0 : 7)
+        if current.point == goal {
+            let cost = gScore[current]! + (current.tool == .torch ? 0 : 7)
             return (reconstruct(cameFrom: prev, point: current), cost)
         }
         
-        let currentTool = open[current]
-        open.removeValue(forKey: current)
         closed.insert(current)
         
-        current.n4()
+        current.neighbors()
             .filter { !closed.contains($0) }
             .forEach { neighbor in
+
+                let g = gScore[current, default: Int.max] + cost(current, to: neighbor)
                 
-                var cost = Int.max
-                
-                let cType = regionType(for: current)
-                let rType = regionType(for: neighbor)
-                var newTool = currentTool
-                if rType == .rocky {
-                    if currentTool == .neither {
-                        cost = 8
-                        newTool = (cType == .wet ? .climbingGear : .torch)
-                    } else {
-                        cost = 1
-                    }
-                } else if rType == .wet {
-                    if currentTool == .torch {
-                        cost = 7
-                        newTool = (cType == .rocky ? .climbingGear : .neither)
-                    } else {
-                        cost = 8
-                    }
-                } else if rType == .narrow {
-                    if currentTool == .climbingGear {
-                        cost = 8
-                        newTool = (cType == .wet ? .torch : .neither)
-                    } else {
-                        cost = 1
-                    }
-                }
-                
-                let g = gScore[current, default: Int.max] + cost
-                
-                if !open.keys.contains(neighbor) {
-                    open[neighbor] = newTool
+                if !open.contains(neighbor) {
+                    open.append(neighbor)
                 } else if g >= gScore[neighbor, default: Int.max] {
                     return
                 }
-                
+
                 prev[neighbor] = current
                 gScore[neighbor] = g
-                fScore[neighbor] = heuristic(neighbor, goal) + g
+                fScore[neighbor] = heuristic(neighbor.point, goal) + g
         }
     }
     
@@ -172,6 +170,3 @@ func a🌟(start: Point, goal: Point) -> (path: [Point], time: Int) {
 print ("Part 2:")
 print (a🌟(start: Point(0, 0), goal: target).time)
 
-//1106 H
-//1105 H
-//1099 H
